@@ -35,13 +35,13 @@ class Client < WhatCD::Client
   
   def upload(payload)
     unless authenticated?
-      raise AuthError
+      raise WhatCD::AuthError
     end
 
     res = connection.post "/upload.php", payload
 
     unless res.status == 302 && res.headers["location"] =~ /torrents/
-      raise APIError
+      raise WhatCD::APIError
     end
   end
 end
@@ -102,7 +102,7 @@ bitrates.each do |bitrate|
   print "Encoding #{bitrate} ... "
   Open3.popen3(*%W(#{whatmp3} --#{bitrate} --output=#{flacdir} #{srcdir})) do |stdin, stdout, stderr, wait_thr|
     while line = stderr.gets
-      if line.include? "error"
+      if line.include? "ERROR while"
         Process.kill("TERM", wait_thr.pid)
         abort "Stopping; something went wrong: #{line}"
       end
