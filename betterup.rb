@@ -33,6 +33,17 @@ class Client < WhatCD::Client
     end
   end
   
+  def authenticate(username, password)
+    body = { :username => username, :password => password, :keeplogged => 1 }
+    res  = connection.post "/login.php", body
+
+    unless res["set-cookie"] && res["location"] == "index.php"
+      raise WhatCD::AuthError
+    end
+    File.write('cookie.txt', res["set-cookie"].match('session.*').to_s)
+    @authenticated = true
+  end
+
   def upload(payload)
     unless authenticated?
       raise WhatCD::AuthError
@@ -46,7 +57,13 @@ class Client < WhatCD::Client
   end
 end
 
-api      = Client.new username, password
+if File.exist? "cookie.txt" 
+  api = Client.new
+  api.set_cookie File.read("cookie.txt")
+else
+  api = Client.new username, password
+end  
+
 authkey  = api.fetch(:index)["authkey"]
 torrent  = api.fetch :torrent, id: ARGV.first.strip.split("=").last.to_i
 fpath    = HTMLEntities.new.decode(torrent["torrent"]["filePath"]) 
