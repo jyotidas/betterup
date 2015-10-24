@@ -70,8 +70,8 @@ torrent  = api.fetch :torrent, id: ARGV.first.strip.split("=").last.to_i
 fpath    = HTMLEntities.new.decode(torrent["torrent"]["filePath"]) 
 srcdir   = "#{flacdir}/#{fpath}"
 
-unless torrent["torrent"]["encoding"].include? "Lossless"
-  abort "Abort! PL does not point to a lossless torrent."
+if torrent["torrent"]["encoding"] != "Lossless"
+  abort "Abort! PL does not point to a 16bit FLAC."
 end
 
 if fpath == ""
