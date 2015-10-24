@@ -119,6 +119,12 @@ puts "#{fpath}:"
 bitrates.each do |bitrate|
   print "Encoding #{bitrate} ... "
   Open3.popen3(*%W(#{whatmp3} --#{bitrate} --output=#{outdir} #{srcdir})) do |stdin, stdout, stderr, wait_thr|
+    begin
+      stdout.each { |line| print line }
+    rescue Errno::EIO
+      puts "Errno:EIO error, but this probably just means " +
+           "that the process has finished giving output."
+    end
     while line = stderr.gets
       if line.include? "ERROR while"
         Process.kill("TERM", wait_thr.pid)
@@ -136,7 +142,7 @@ bitrates.each do |bitrate|
   print "Uploading ... "
   api.upload payload
   puts "done."
-  print "Moving #{file} to watchdir ... "
+  print "Moving #{file} to #{watchdir} ... "
   system *%W(mv #{file} #{watchdir})
   puts "done."
 end
