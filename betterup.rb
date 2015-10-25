@@ -142,7 +142,7 @@ bitrates.each do |bitrate|
   print "Uploading ... "
   api.upload payload
   puts "done."
-  print "Moving #{file} to #{watchdir} ... "
+  print "Moving #{file} to watchdir ... "
   system *%W(mv #{file} #{watchdir})
   puts "done."
 end
