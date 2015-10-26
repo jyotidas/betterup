@@ -82,6 +82,20 @@ unless File.directory? srcdir
   abort "FLAC not found in #{flacdir}; nothing to encode."
 end
 
+torrent["torrent"]["fileList"].split("|||").each do |filename|
+  pathlen = fpath.length + HTMLEntities.new.decode(filename).partition('{{{').first.length
+  # if the source folder name did not contain "FLAC", account for whatmp3 adding additional
+  # chars, e.g. " (V0)"
+  if not fpath =~ /flac/i
+    if bitrates.include? "320"
+      pathlen += 6
+    else
+      pathlen += 5
+    end
+  end
+  abort "The transcoded torrent would violate r2.3.12." if pathlen > 180
+end
+
 def identity(torrent)
   %w(remasterTitle remasterYear remasterRecordLabel remasterCatalogueNumber media remastered).collect { |attrib| torrent[attrib] }
 end
@@ -126,7 +140,7 @@ bitrates.each do |bitrate|
            "that the process has finished giving output."
     end
     while line = stderr.gets
-      if line.include? "ERROR while"
+      if line.include?("ERROR while") || line.include?("Unsupported number of channels")
         Process.kill("TERM", wait_thr.pid)
         abort "Stopping; something went wrong: #{line}"
       end
