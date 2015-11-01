@@ -9,6 +9,7 @@ username = "WHAT_CD_USERNAME"
 password = "WHAT_CD_PASSWORD"
 
 flacdir  = "/full/path/to/where/your/FLACs/live"
+outdir   = "/full/path/to/where/you/want/your/transcodes/to/go"
 watchdir = "/full/path/to/your/deluge/or/rtorrent/watchdir"
 whatmp3  = "/full/path/to/whatmp3"
 
@@ -131,7 +132,13 @@ puts "#{fpath}:"
 
 bitrates.each do |bitrate|
   print "Encoding #{bitrate} ... "
-  Open3.popen3(*%W(#{whatmp3} --#{bitrate} --output=#{flacdir} #{srcdir})) do |stdin, stdout, stderr, wait_thr|
+  Open3.popen3(*%W(#{whatmp3} --#{bitrate} --output=#{outdir} #{srcdir})) do |stdin, stdout, stderr, wait_thr|
+    begin
+      stdout.each { |line| print line }
+    rescue Errno::EIO
+      puts "Errno:EIO error, but this probably just means " +
+           "that the process has finished giving output."
+    end
     while line = stderr.gets
       if line.include?("ERROR while") || line.include?("Unsupported number of channels")
         Process.kill("TERM", wait_thr.pid)
